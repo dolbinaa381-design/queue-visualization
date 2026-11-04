@@ -4,23 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Визуализация системы обслуживания</title>
+    <!-- Подключаем MathJax для красивых формул -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
     <style>
         :root {
-            --bg: #f4f6f9;
-            --card: #ffffff;
-            --text: #333333;
-            --muted: #888888;
-            --border: #e0e4e8;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
             --purple: #8b5cf6;
             --blue: #3b82f6;
             --green: #10b981;
-            --primary: #2563eb;
+            --border: #e5e7eb;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -29,303 +34,358 @@
 
         .container {
             width: 100%;
-            max-width: 1100px;
+            max-width: 1000px;
         }
 
-        /* Верхние табы */
-        .tabs {
-            display: flex;
-            gap: 10px;
+        h1 { font-size: 22px; margin-bottom: 20px; color: #1e3a8a; }
+        h2 { font-size: 16px; margin-top: 0; margin-bottom: 15px; }
+
+        /* Карточки */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            border: 1px solid var(--border);
         }
 
-        .tab {
-            padding: 10px 20px;
-            background: var(--card);
+        .formulas {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .formula-box {
+            flex: 1;
             border: 1px solid var(--border);
+            padding: 15px;
             border-radius: 8px;
+            text-align: center;
+            background: #fafafa;
+        }
+
+        /* Табы */
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab {
+            padding: 8px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 15px;
-            color: var(--text);
+            font-size: 14px;
             transition: 0.2s;
         }
-
-        .tab:hover { background: #f0f0f0; }
         .tab.active {
-            background: #eef2ff;
+            background: #eff6ff;
             border-color: var(--primary);
             color: var(--primary);
             font-weight: 600;
         }
 
-        /* Панель управления */
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-
+        /* Управление */
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
         .btn {
             padding: 8px 16px;
             border-radius: 6px;
             border: 1px solid var(--border);
-            background: var(--card);
+            background: var(--card-bg);
             cursor: pointer;
-            font-size: 15px;
-            transition: 0.2s;
+            font-size: 14px;
         }
-
-        .btn:hover { background: #f0f0f0; }
         .btn.primary {
             background: var(--primary);
             color: white;
             border: none;
         }
-        .btn.primary:hover { background: #1d4ed8; }
-
-        .speed-select {
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        select {
             padding: 8px;
             border-radius: 6px;
             border: 1px solid var(--border);
+            background: var(--card-bg);
             outline: none;
-            background: var(--card);
         }
 
-        /* Основная карточка */
-        .main-card {
-            background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            padding: 20px;
-            position: relative;
-        }
-
-        .header-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .mode-title { font-size: 20px; font-weight: bold; }
-        .interval-info { color: var(--muted); font-size: 14px; }
-
-        /* Сетка визуализации */
-        .vis-grid {
+        /* Визуализация */
+        .vis-container {
             display: grid;
             grid-template-columns: 1fr 2fr 1fr 1fr;
-            gap: 20px;
-            min-height: 300px;
+            gap: 15px;
             margin-bottom: 20px;
         }
-
         .col {
             display: flex;
             flex-direction: column;
-            align-items: center;
             border-right: 1px dashed var(--border);
         }
         .col:last-child { border-right: none; }
-
         .col-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--muted);
+            font-size: 11px;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-align: center;
             letter-spacing: 1px;
         }
 
-        /* Блоки */
-        .box {
-            width: 100%;
-            height: 100%;
+        .drop-zone {
+            min-height: 200px;
             display: flex;
             flex-wrap: wrap;
             align-content: flex-start;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .queue-box {
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-
-        .channels-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .channel-box {
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            font-size: 14px;
-            color: var(--muted);
             background: #fafafa;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
             position: relative;
         }
-        .channel-box.busy {
+        .drop-zone.queue-zone { border: 1px solid var(--border); background: white; }
+
+        .channels-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .channel {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: white;
+            transition: 0.2s;
+        }
+        .channel.busy {
             border-color: var(--green);
             background: #ecfdf5;
-            color: var(--text);
+            color: var(--text-main);
         }
 
-        /* Точки (заявки) */
         .dot {
-            width: 26px;
-            height: 26px;
+            width: 22px; height: 22px;
             border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; color: white; font-weight: bold;
+        }
+        .dot.purple { background: var(--purple); }
+        .dot.blue { background: var(--blue); }
+        .dot.green { background: var(--green); opacity: 0.6; }
+
+        /* Ползунок */
+        .slider-wrapper { margin-top: 10px; }
+        .slider-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 5px;}
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+
+        /* Статистика (нижние карточки) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .stat-box {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: bold; display: flex; align-items: baseline; gap: 5px; }
+        .stat-value span { font-size: 14px; font-weight: normal; color: var(--text-muted); }
+        
+        .status-alert {
+            grid-column: span 2;
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #1e3a8a;
+            margin-top: 5px;
+        }
+
+        /* Обозначения */
+        .definitions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .def-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            gap: 15px;
         }
-        .dot.purple { background-color: var(--purple); }
-        .dot.blue { background-color: var(--blue); }
-        .dot.green { background-color: var(--green); opacity: 0.6; }
-
-        /* Ползунок внизу */
-        .slider-container {
-            margin-top: 20px;
-            padding: 0 20px;
+        .def-symbol {
+            border: 1px solid var(--border);
+            padding: 5px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            min-width: 40px;
+            text-align: center;
         }
-        .slider-label { font-size: 14px; font-weight: bold; margin-bottom: 10px; }
-        .slider-label span { color: var(--primary); }
-
-        input[type=range] {
-            width: 100%;
-            accent-color: var(--primary);
-        }
+        .def-text { font-size: 13px; color: var(--text-muted); }
 
         /* Легенда */
-        .legend {
-            display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--muted);
-            justify-content: center;
-            border-top: 1px solid var(--border);
-            padding-top: 15px;
-        }
+        .legend { display: flex; gap: 20px; font-size: 13px; color: var(--text-muted); margin-top: 15px; justify-content: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; }
-        .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Табы режимов -->
-    <div class="tabs">
-        <div class="tab" id="tab1" onclick="setMode('calm')">Спокойный режим</div>
-        <div class="tab" id="tab2" onclick="setMode('high')">Высокая нагрузка</div>
-        <div class="tab" id="tab3" onclick="setMode('overload')">Перегрузка</div>
+    <h1>ТЕОРИЯ ВЕРОЯТНОСТЕЙ • ЛАБОРАТОРНАЯ РАБОТА №2</h1>
+
+    <!-- Блок с формулами -->
+    <div class="card">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">Базовая модель</div>
+        <div style="font-size: 13px; color: var(--text-muted);">В каждом интервале поступает случайное число заявок, система способна обслужить не более \(c\) заявок. После обслуживания оставшиеся заявки переходят в следующий интервал.</div>
+        <div class="formulas">
+            <div class="formula-box">\(X_n \sim \text{Pois}(\lambda)\)</div>
+            <div class="formula-box">\(Q_n = \max\{0, Q_{n-1} + X_n - c\}\)</div>
+        </div>
     </div>
 
-    <!-- Кнопки управления -->
+    <!-- Табы и управление -->
+    <div class="tabs">
+        <div class="tab active" id="tab-calm" onclick="setMode('calm')">Спокойный режим</div>
+        <div class="tab" id="tab-high" onclick="setMode('high')">Высокая нагрузка</div>
+        <div class="tab" id="tab-over" onclick="setMode('over')">Перегрузка</div>
+    </div>
+
     <div class="controls">
         <button class="btn primary" id="btn-play" onclick="toggleAuto()">Пуск</button>
         <button class="btn" onclick="step()">Шаг</button>
         <button class="btn" onclick="reset()">Сначала</button>
         
-        <select class="speed-select" id="speed" onchange="changeSpeed()">
-            <option value="1500">Скорость 0.5x</option>
-            <option value="800" selected>Скорость 1x</option>
-            <option value="300">Скорость 2x</option>
-        </select>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 13px; color: var(--text-muted);">Скорость</span>
+            <select id="speed" onchange="changeSpeed()">
+                <option value="1500">0.5x</option>
+                <option value="800" selected>1x</option>
+                <option value="300">2x</option>
+            </select>
+        </div>
     </div>
 
-    <!-- Основной блок визуализации -->
-    <div class="main-card">
-        <div class="header-info">
-            <div class="mode-title" id="mode-title">Спокойный режим</div>
-            <div class="interval-info">Интервал <span id="val-n">0</span> • результат</div>
+    <!-- Главная визуализация -->
+    <div class="card" style="padding-top: 15px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
+            <div style="font-weight: bold;" id="mode-title">Спокойный режим (ρ=0.5)</div>
+            <div style="font-size: 13px; color: var(--text-muted);">Интервал <span id="val-n">0</span></div>
         </div>
 
-        <div class="vis-grid">
+        <div class="vis-container">
             <!-- Поступление -->
             <div class="col">
                 <div class="col-title">Поступление</div>
-                <div class="box" id="box-in"></div>
+                <div class="drop-zone" id="box-in"></div>
             </div>
 
             <!-- Очередь -->
             <div class="col">
                 <div class="col-title">Очередь</div>
-                <div class="box queue-box" id="box-queue">
-                    <div style="color: #ccc; font-size: 12px; align-self: flex-end; width: 100%; text-align: right;">очередь</div>
+                <div class="drop-zone queue-zone" id="box-queue">
+                    <div style="position: absolute; bottom: 5px; right: 10px; font-size: 11px; color: #ccc;">очередь</div>
                 </div>
             </div>
 
-            <!-- Каналы (генерируются JS) -->
+            <!-- Каналы -->
             <div class="col">
                 <div class="col-title">Каналы</div>
-                <div class="channels-container" id="box-channels"></div>
+                <div class="channels-list" id="box-channels"></div>
             </div>
 
             <!-- Выход -->
             <div class="col">
                 <div class="col-title">Выход</div>
-                <div class="box" id="box-out"></div>
+                <div class="drop-zone" id="box-out"></div>
             </div>
         </div>
 
         <!-- Ползунок очереди -->
-        <div class="slider-container">
-            <div class="slider-label">Q<sub>n</sub> <span id="val-q-text">(0 заявок в очереди)</span></div>
-            <input type="range" id="queue-slider" min="0" max="50" value="0" disabled>
+        <div class="slider-wrapper">
+            <div class="slider-labels">
+                <span>\(Q_n\)</span>
+                <span id="queue-val-text">(0 заявок в очереди)</span>
+            </div>
+            <input type="range" id="queue-slider" min="0" max="100" value="0" disabled>
+        </div>
+
+        <!-- Легенда -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background: var(--purple);"></div> новые заявки</div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--blue);"></div> очередь</div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--green);"></div> обслуживание</div>
         </div>
     </div>
 
-    <!-- Легенда -->
-    <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background: var(--purple);"></div> новые заявки</div>
-        <div class="legend-item"><div class="legend-dot" style="background: var(--blue);"></div> очередь</div>
-        <div class="legend-item"><div class="legend-dot" style="background: var(--green);"></div> обслуживание</div>
+    <!-- Текущий интервал (Статистика) -->
+    <div class="card">
+        <h2>Текущий интервал</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-label">Новые заявки</div>
+                <div class="stat-value" id="stat-x">0 <span>\(X_n\)</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Обслужено</div>
+                <div class="stat-value" id="stat-b">0 <span>\(B_n\)</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Очередь после обслуживания</div>
+                <div class="stat-value" id="stat-q">0 <span>\(Q_n\)</span></div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Пропускная способность</div>
+                <div class="stat-value" id="stat-c">5 <span>c</span></div>
+            </div>
+            
+            <div class="status-alert" id="status-message">
+                Очередь успевает разгружаться.
+            </div>
+        </div>
     </div>
+
+    <!-- Обозначения -->
+    <div class="card">
+        <h2>Обозначения</h2>
+        <div class="definitions-grid">
+            <div class="def-item">
+                <div class="def-symbol">\(X_n\)</div>
+                <div class="def-text">число новых заявок за интервал</div>
+            </div>
+            <div class="def-item">
+                <div class="def-symbol">\(B_n\)</div>
+                <div class="def-text">число заявок, обслуженных за интервал</div>
+            </div>
+            <div class="def-item">
+                <div class="def-symbol">\(Q_n\)</div>
+                <div class="def-text">число заявок, оставшихся в очереди</div>
+            </div>
+            <div class="def-item">
+                <div class="def-symbol">\(c\)</div>
+                <div class="def-text">пропускная способность системы</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // --- Параметры из лабораторной (c=5) ---
-    const c = 5;
-    let lambda = 2.5; // по умолчанию спокойный режим (rho = 0.5)
+    // --- НАШИ ДАННЫЕ ИЗ ЛАБОРАТОРНОЙ ---
+    const c = 5; // Пропускная способность строго 5!
+    
+    // Настройки трех режимов (из Таблицы 2)
+    const modes = {
+        calm: { lambda: 2.5, title: "Спокойный режим (ρ=0.5, λ=2.5)" },
+        high: { lambda: 4.75, title: "Высокая нагрузка (ρ=0.95, λ=4.75)" },
+        over: { lambda: 6.0, title: "Перегрузка (ρ=1.2, λ=6.0)" }
+    };
+
+    let currentLambda = modes.calm.lambda;
     let queue = 0;
     let interval = 0;
     let isRunning = false;
     let timer = null;
-
-    // Настройки режимов
-    const modes = {
-        calm: { lambda: 2.5, title: "Спокойный режим (ρ=0.5, λ=2.5)" },
-        high: { lambda: 4.75, title: "Высокая нагрузка (ρ=0.95, λ=4.75)" },
-        overload: { lambda: 6.0, title: "Перегрузка (ρ=1.2, λ=6.0)" }
-    };
-
-    // Инициализация каналов
-    function initChannels() {
-        const container = document.getElementById('box-channels');
-        container.innerHTML = '';
-        for (let i = 1; i <= c; i++) {
-            let div = document.createElement('div');
-            div.className = 'channel-box';
-            div.id = 'channel-' + i;
-            div.innerText = 'канал ' + i;
-            container.appendChild(div);
-        }
-    }
 
     // Генератор Пуассона (алгоритм Кнута)
     function getPoisson(lam) {
@@ -339,23 +399,52 @@
         return k - 1;
     }
 
-    // Один шаг симуляции
+    function initChannels() {
+        const container = document.getElementById('box-channels');
+        container.innerHTML = '';
+        for (let i = 1; i <= c; i++) {
+            let div = document.createElement('div');
+            div.className = 'channel';
+            div.id = 'channel-' + i;
+            div.innerText = 'канал ' + i;
+            container.appendChild(div);
+        }
+    }
+
     function step() {
         interval++;
-        let Xn = getPoisson(lambda);
+        let Xn = getPoisson(currentLambda);
         let available = queue + Xn;
         let Bn = Math.min(available, c);
         let newQ = Math.max(0, available - c);
 
-        // Обновляем текст
+        // Обновляем цифры в статистике
         document.getElementById('val-n').innerText = interval;
-        document.getElementById('val-q-text').innerText = `(${newQ} заявок в очереди)`;
+        document.getElementById('stat-x').innerHTML = `${Xn} <span>\(X_n\)</span>`;
+        document.getElementById('stat-b').innerHTML = `${Bn} <span>\(B_n\)</span>`;
+        document.getElementById('stat-q').innerHTML = `${newQ} <span>\(Q_n\)</span>`;
         
-        // Обновляем ползунок (ограничиваем макс 50 для визуала)
-        let slider = document.getElementById('queue-slider');
-        slider.value = Math.min(newQ, 50);
+        // Обновляем ползунок
+        document.getElementById('queue-val-text').innerText = `(${newQ} заявок в очереди)`;
+        document.getElementById('queue-slider').value = Math.min(newQ, 100); // Ограничитель для UI
 
-        // Отрисовка Поступления (фиолетовые)
+        // Обновляем сообщение внизу
+        let statusEl = document.getElementById('status-message');
+        if (newQ === 0) {
+            statusEl.style.color = "#1e3a8a";
+            statusEl.style.borderLeftColor = "var(--primary)";
+            statusEl.innerText = "Очередь успевает разгружаться.";
+        } else if (newQ > 0 && newQ < 10) {
+            statusEl.style.color = "#b45309";
+            statusEl.style.borderLeftColor = "#f59e0b";
+            statusEl.innerText = "Наблюдается небольшая задержка в очереди.";
+        } else {
+            statusEl.style.color = "#b91c1c";
+            statusEl.style.borderLeftColor = "#ef4444";
+            statusEl.innerText = "Поступающие заявки систематически накапливаются в очереди.";
+        }
+
+        // Отрисовка: Поступление (фиолетовые)
         const boxIn = document.getElementById('box-in');
         boxIn.innerHTML = '';
         for (let i = 0; i < Xn; i++) {
@@ -364,33 +453,38 @@
             boxIn.appendChild(d);
         }
 
-        // Отрисовка Каналов (зеленые)
-        initChannels(); // сброс
-        for (let i = 1; i <= Bn; i++) {
+        // Отрисовка: Каналы (зеленые)
+        for (let i = 1; i <= c; i++) {
             let ch = document.getElementById('channel-' + i);
-            ch.classList.add('busy');
-            ch.innerHTML = `<div class="dot green" style="margin: 0 auto;"></div>`;
+            if (i <= Bn) {
+                ch.classList.add('busy');
+                ch.innerHTML = `<div class="dot green" style="margin: 0 auto;"></div>`;
+            } else {
+                ch.classList.remove('busy');
+                ch.innerHTML = 'канал ' + i;
+            }
         }
 
-        // Отрисовка Выхода (зеленые)
+        // Отрисовка: Выход (зеленые)
         const boxOut = document.getElementById('box-out');
         boxOut.innerHTML = '';
         for (let i = 0; i < Bn; i++) {
             let d = document.createElement('div');
             d.className = 'dot green';
-            // Номера заявок на выходе (условные, просто для красоты как на фото)
-            d.innerText = (interval * c + i) % 10; 
+            d.innerText = (interval * c + i) % 10; // Просто условные номера для красоты
             boxOut.appendChild(d);
         }
 
-        // Отрисовка Очереди (синие с цифрами)
+        // Отрисовка: Очередь (синие)
         const boxQueue = document.getElementById('box-queue');
-        boxQueue.innerHTML = '<div style="color: #ccc; font-size: 12px; align-self: flex-end; width: 100%; text-align: right;">очередь</div>';
-        let showQ = Math.min(newQ, 30); // Ограничитель, чтобы не сломать верстку
+        // Очищаем всё, кроме надписи "очередь"
+        boxQueue.innerHTML = '<div style="position: absolute; bottom: 5px; right: 10px; font-size: 11px; color: #ccc;">очередь</div>';
+        
+        let showQ = Math.min(newQ, 30); // Показываем максимум 30 кружочков
         for (let i = 0; i < showQ; i++) {
             let d = document.createElement('div');
             d.className = 'dot blue';
-            d.innerText = i + 1; // Просто нумеруем от 1 до N
+            d.innerText = i + 1; // Нумеруем заявки
             boxQueue.appendChild(d);
         }
         if (newQ > 30) {
@@ -398,7 +492,8 @@
             span.style.width = '100%';
             span.style.textAlign = 'center';
             span.style.color = 'var(--blue)';
-            span.innerText = '...';
+            span.style.fontWeight = 'bold';
+            span.innerText = `... и ещё ${newQ - 30}`;
             boxQueue.appendChild(span);
         }
 
@@ -431,33 +526,40 @@
     function reset() {
         clearInterval(timer);
         isRunning = false;
+        queue = 0;
+        interval = 0;
         document.getElementById('btn-play').innerText = 'Пуск';
         document.getElementById('btn-play').classList.remove('primary');
         
-        queue = 0;
-        interval = 0;
         document.getElementById('val-n').innerText = '0';
-        document.getElementById('val-q-text').innerText = `(0 заявок в очереди)`;
+        document.getElementById('stat-x').innerHTML = `0 <span>\(X_n\)</span>`;
+        document.getElementById('stat-b').innerHTML = `0 <span>\(B_n\)</span>`;
+        document.getElementById('stat-q').innerHTML = `0 <span>\(Q_n\)</span>`;
+        document.getElementById('queue-val-text').innerText = `(0 заявок в очереди)`;
         document.getElementById('queue-slider').value = 0;
         
         document.getElementById('box-in').innerHTML = '';
         document.getElementById('box-out').innerHTML = '';
-        document.getElementById('box-queue').innerHTML = '<div style="color: #ccc; font-size: 12px; align-self: flex-end; width: 100%; text-align: right;">очередь</div>';
+        document.getElementById('box-queue').innerHTML = '<div style="position: absolute; bottom: 5px; right: 10px; font-size: 11px; color: #ccc;">очередь</div>';
+        
+        let statusEl = document.getElementById('status-message');
+        statusEl.style.color = "#1e3a8a";
+        statusEl.style.borderLeftColor = "var(--primary)";
+        statusEl.innerText = "Очередь успевает разгружаться.";
+
         initChannels();
     }
 
     function setMode(modeKey) {
-        // Подсветка табов
-        document.getElementById('tab1').classList.remove('active');
-        document.getElementById('tab2').classList.remove('active');
-        document.getElementById('tab3').classList.remove('active');
+        document.getElementById('tab-calm').classList.remove('active');
+        document.getElementById('tab-high').classList.remove('active');
+        document.getElementById('tab-over').classList.remove('active');
         
-        if (modeKey === 'calm') document.getElementById('tab1').classList.add('active');
-        if (modeKey === 'high') document.getElementById('tab2').classList.add('active');
-        if (modeKey === 'overload') document.getElementById('tab3').classList.add('active');
+        if (modeKey === 'calm') document.getElementById('tab-calm').classList.add('active');
+        if (modeKey === 'high') document.getElementById('tab-high').classList.add('active');
+        if (modeKey === 'over') document.getElementById('tab-over').classList.add('active');
 
-        // Смена параметров
-        lambda = modes[modeKey].lambda;
+        currentLambda = modes[modeKey].lambda;
         document.getElementById('mode-title').innerText = modes[modeKey].title;
         
         reset();
@@ -466,6 +568,8 @@
     // Запуск при загрузке
     window.onload = () => {
         setMode('calm');
+        // Повторный рендер MathJax для формул, добавленных динамически
+        if (window.MathJax) { MathJax.typesetPromise(); }
     };
 </script>
 </body>
