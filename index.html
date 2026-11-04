@@ -65,7 +65,7 @@
         }
 
         /* Табы */
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .tab {
             padding: 8px 16px;
             background: var(--card-bg);
@@ -237,18 +237,19 @@
     <!-- Блок с формулами -->
     <div class="card">
         <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">Базовая модель</div>
-        <div style="font-size: 13px; color: var(--text-muted);">В каждом интервале поступает случайное число заявок, система способна обслужить не более \(c\) заявок. После обслуживания оставшиеся заявки переходят в следующий интервал.</div>
+        <div style="font-size: 13px; color: var(--text-muted);">В каждом интервале поступает случайное число заявок, система способна обслужить не более <b>\(c=5\)</b> заявок. После обслуживания оставшиеся заявки переходят в следующий интервал.</div>
         <div class="formulas">
             <div class="formula-box">\(X_n \sim \text{Pois}(\lambda)\)</div>
             <div class="formula-box">\(Q_n = \max\{0, Q_{n-1} + X_n - c\}\)</div>
         </div>
     </div>
 
-    <!-- Табы и управление -->
+    <!-- Табы и управление (ТЕПЕРЬ 4 РЕЖИМА!) -->
     <div class="tabs">
-        <div class="tab active" id="tab-calm" onclick="setMode('calm')">Спокойный режим</div>
-        <div class="tab" id="tab-high" onclick="setMode('high')">Высокая нагрузка</div>
-        <div class="tab" id="tab-over" onclick="setMode('over')">Перегрузка</div>
+        <div class="tab active" id="tab-calm" onclick="setMode('calm')">ρ=0.5 (λ=2.5)</div>
+        <div class="tab" id="tab-med" onclick="setMode('med')">ρ=0.8 (λ=4.0)</div>
+        <div class="tab" id="tab-high" onclick="setMode('high')">ρ=0.95 (λ=4.75)</div>
+        <div class="tab" id="tab-over" onclick="setMode('over')">ρ=1.2 (λ=6.0)</div>
     </div>
 
     <div class="controls">
@@ -269,7 +270,7 @@
     <!-- Главная визуализация -->
     <div class="card" style="padding-top: 15px;">
         <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
-            <div style="font-weight: bold;" id="mode-title">Спокойный режим (ρ=0.5)</div>
+            <div style="font-weight: bold;" id="mode-title">Режим ρ=0.5, λ=2.5 (c=5)</div>
             <div style="font-size: 13px; color: var(--text-muted);">Интервал <span id="val-n">0</span></div>
         </div>
 
@@ -290,7 +291,7 @@
 
             <!-- Каналы -->
             <div class="col">
-                <div class="col-title">Каналы</div>
+                <div class="col-title">Каналы (c=5)</div>
                 <div class="channels-list" id="box-channels"></div>
             </div>
 
@@ -363,7 +364,7 @@
             </div>
             <div class="def-item">
                 <div class="def-symbol">\(c\)</div>
-                <div class="def-text">пропускная способность системы</div>
+                <div class="def-text">пропускная способность системы (5)</div>
             </div>
         </div>
     </div>
@@ -371,14 +372,15 @@
 </div>
 
 <script>
-    // --- НАШИ ДАННЫЕ ИЗ ЛАБОРАТОРНОЙ ---
-    const c = 5; // Пропускная способность строго 5!
+    // --- СТРОГО ИЗ ПИТОНА ---
+    const c = 5; 
     
-    // Настройки трех режимов (из Таблицы 2)
+    // 4 режима из таблицы 2!
     const modes = {
-        calm: { lambda: 2.5, title: "Спокойный режим (ρ=0.5, λ=2.5)" },
-        high: { lambda: 4.75, title: "Высокая нагрузка (ρ=0.95, λ=4.75)" },
-        over: { lambda: 6.0, title: "Перегрузка (ρ=1.2, λ=6.0)" }
+        calm: { lambda: 2.5, title: "Режим ρ=0.5, λ=2.5 (c=5)" },
+        med:  { lambda: 4.0, title: "Режим ρ=0.8, λ=4.0 (c=5)" },
+        high: { lambda: 4.75, title: "Режим ρ=0.95, λ=4.75 (c=5)" },
+        over: { lambda: 6.0, title: "Режим ρ=1.2, λ=6.0 (c=5)" }
     };
 
     let currentLambda = modes.calm.lambda;
@@ -418,17 +420,14 @@
         let Bn = Math.min(available, c);
         let newQ = Math.max(0, available - c);
 
-        // Обновляем цифры в статистике
         document.getElementById('val-n').innerText = interval;
         document.getElementById('stat-x').innerHTML = `${Xn} <span>\(X_n\)</span>`;
         document.getElementById('stat-b').innerHTML = `${Bn} <span>\(B_n\)</span>`;
         document.getElementById('stat-q').innerHTML = `${newQ} <span>\(Q_n\)</span>`;
         
-        // Обновляем ползунок
         document.getElementById('queue-val-text').innerText = `(${newQ} заявок в очереди)`;
-        document.getElementById('queue-slider').value = Math.min(newQ, 100); // Ограничитель для UI
+        document.getElementById('queue-slider').value = Math.min(newQ, 100);
 
-        // Обновляем сообщение внизу
         let statusEl = document.getElementById('status-message');
         if (newQ === 0) {
             statusEl.style.color = "#1e3a8a";
@@ -444,7 +443,7 @@
             statusEl.innerText = "Поступающие заявки систематически накапливаются в очереди.";
         }
 
-        // Отрисовка: Поступление (фиолетовые)
+        // Отрисовка: Поступление
         const boxIn = document.getElementById('box-in');
         boxIn.innerHTML = '';
         for (let i = 0; i < Xn; i++) {
@@ -453,7 +452,7 @@
             boxIn.appendChild(d);
         }
 
-        // Отрисовка: Каналы (зеленые)
+        // Отрисовка: Каналы
         for (let i = 1; i <= c; i++) {
             let ch = document.getElementById('channel-' + i);
             if (i <= Bn) {
@@ -465,26 +464,24 @@
             }
         }
 
-        // Отрисовка: Выход (зеленые)
+        // Отрисовка: Выход
         const boxOut = document.getElementById('box-out');
         boxOut.innerHTML = '';
         for (let i = 0; i < Bn; i++) {
             let d = document.createElement('div');
             d.className = 'dot green';
-            d.innerText = (interval * c + i) % 10; // Просто условные номера для красоты
             boxOut.appendChild(d);
         }
 
-        // Отрисовка: Очередь (синие)
+        // Отрисовка: Очередь
         const boxQueue = document.getElementById('box-queue');
-        // Очищаем всё, кроме надписи "очередь"
         boxQueue.innerHTML = '<div style="position: absolute; bottom: 5px; right: 10px; font-size: 11px; color: #ccc;">очередь</div>';
         
-        let showQ = Math.min(newQ, 30); // Показываем максимум 30 кружочков
+        let showQ = Math.min(newQ, 30);
         for (let i = 0; i < showQ; i++) {
             let d = document.createElement('div');
             d.className = 'dot blue';
-            d.innerText = i + 1; // Нумеруем заявки
+            d.innerText = i + 1;
             boxQueue.appendChild(d);
         }
         if (newQ > 30) {
@@ -552,10 +549,12 @@
 
     function setMode(modeKey) {
         document.getElementById('tab-calm').classList.remove('active');
+        document.getElementById('tab-med').classList.remove('active');
         document.getElementById('tab-high').classList.remove('active');
         document.getElementById('tab-over').classList.remove('active');
         
         if (modeKey === 'calm') document.getElementById('tab-calm').classList.add('active');
+        if (modeKey === 'med') document.getElementById('tab-med').classList.add('active');
         if (modeKey === 'high') document.getElementById('tab-high').classList.add('active');
         if (modeKey === 'over') document.getElementById('tab-over').classList.add('active');
 
@@ -568,7 +567,6 @@
     // Запуск при загрузке
     window.onload = () => {
         setMode('calm');
-        // Повторный рендер MathJax для формул, добавленных динамически
         if (window.MathJax) { MathJax.typesetPromise(); }
     };
 </script>
